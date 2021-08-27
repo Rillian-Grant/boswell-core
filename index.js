@@ -1,6 +1,6 @@
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
-import fs from "fs";
+// import fs from "fs";
 
 const sql = `
 CREATE TABLE IF NOT EXISTS entry(
@@ -72,7 +72,7 @@ class Journal {
 }
 
 (async () => {
-    var j = await new Journal("./db.sql")
+    var j = await new Journal("./db.db")
     await j.createEntry("Test")
     await j.createEntry("Test2 #atest")
     await j.findEntries("#atest")
