@@ -1,5 +1,6 @@
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
+import SQL from "sql-template-strings";
 // import fs from "fs";
 
 const sql = `
@@ -55,13 +56,20 @@ class Journal {
 
     async findEntries(tags) {
         tags = tags.match(/#(\w+)/g).map(tag => tag.slice(1))
+        console.log(tags.length)
 
-        var ids = []
-        for (const tagID in tags) {
-            ids = ids.concat(await this.db.all("SELECT entry FROM tag WHERE tag=?", tags[tagID]))
-        }
-
-        ids = ids.map(id => id.entry)
+        var ids = await this.db.all(`
+            SELECT entry.id FROM (
+                SELECT tag.entry FROM tag
+                WHERE tag.tag IN (${"?, ".repeat(tags.length-1)+"?"})
+                GROUP BY tag.entry HAVING COUNT(DISTINCT tag.tag) = ?
+            ) AS entriesContainingAllTags
+            JOIN entry ON entry.id = entriesContainingAllTags.entry
+        `,
+        [...tags, tags.length]
+        )
+        
+        ids = ids.map(tag => tag.id)
 
         console.log(ids)
     }
@@ -69,12 +77,27 @@ class Journal {
     async getEntry(entry_id) {
         return await this.db.get("SELECT * FROM entry WHERE id=?", entry_id)
     }
+
+    async getTags(entry_id) {
+        return await (await this.db.all("SELECT tag FROM tag WHERE entry=?", entry_id)).map(obj => (obj.tag))
+    }
+
+    async getIncomingLinks(entry_id) {
+        return await this.findEntries("#" + entry_id)
+    }
+
+    async getOutgoingLinks(entry_id) {
+        var tags = await this.getTags(entry_id)
+
+        tags = tags.filter(tag => /\d+/.test(tag))
+
+        return tags
+    }
 }
 
 (async () => {
     var j = await new Journal("./db.db")
     await j.createEntry("Test")
-    await j.createEntry("Test2 #atest")
-    await j.findEntries("#atest")
-    console.log(await j.getEntry(5))
+    await j.createEntry("Test2 #atest #blob #5 #3463")
+    await j.findEntries("#atest #blob")
 })()

@@ -9,6 +9,7 @@
   "author": "Rillian Grant <rillian.grant@gmail.com>",
   "license": "GPL-3.0-or-later",
   "dependencies": {
+    "sql-template-strings": "^2.2.2",
     "sqlite": "^4.0.23",
     "sqlite3": "^5.0.2"
   },
