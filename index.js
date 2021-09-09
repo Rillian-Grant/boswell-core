@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS tag(
 );
 `
 
-class Journal {
+export default class Journal {
     constructor(dbFile) {
         this.db = null
         this.dbFile = dbFile
@@ -39,10 +39,11 @@ class Journal {
 
         const result = await this.db.run("INSERT INTO entry(content, created_at) VALUES (?, ?)", entry, Date.now())
         await this.#createTags(result.lastID, entry)
+
+        return result.lastID
     }
 
     async #createTags(entry_id, entry) {
-        console.log(entry, entry_id)
         // Returns an array of tags
         var tags = entry.match(/#(\w+)/g)
         // IF there are any tags
@@ -50,13 +51,14 @@ class Journal {
             // Remove the hash
             tags = tags.map(tag => tag.slice(1))
         
-            await tags.forEach(tag => this.db.run("INSERT INTO tag VALUES (?,?)", tag, entry_id))
+            for (var i in tags) {
+                await this.db.run("INSERT INTO tag VALUES (?,?)", tags[i], entry_id)
+            }
         }
     }
 
     async findEntries(tags) {
         tags = tags.match(/#(\w+)/g).map(tag => tag.slice(1))
-        console.log(tags.length)
 
         var ids = await this.db.all(`
             SELECT entry.id FROM (
@@ -71,7 +73,7 @@ class Journal {
         
         ids = ids.map(tag => tag.id)
 
-        console.log(ids)
+        return ids
     }
 
     async getEntry(entry_id) {
@@ -82,6 +84,7 @@ class Journal {
         return await (await this.db.all("SELECT tag FROM tag WHERE entry=?", entry_id)).map(obj => (obj.tag))
     }
 
+    // Useless?
     async getIncomingLinks(entry_id) {
         return await this.findEntries("#" + entry_id)
     }
@@ -93,11 +96,13 @@ class Journal {
 
         return tags
     }
+    // /Useless?
 }
 
+/*
 (async () => {
     var j = await new Journal("./db.db")
     await j.createEntry("Test")
     await j.createEntry("Test2 #atest #blob #5 #3463")
     await j.findEntries("#atest #blob")
-})()
+})()*/

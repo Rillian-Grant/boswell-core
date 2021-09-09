@@ -1,6 +1,3 @@
-# Database
-*.db
-
 # Logs
 logs
 *.log
