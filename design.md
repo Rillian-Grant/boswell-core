@@ -1,5 +1,9 @@
 # Design
 
+## Enforced principles:
+
+Tags must be passed round as a array with no #. Unless explicitly part of a test string that must be unpacked by a specific function
+
 ## An Entry
 
 ```

@@ -24,23 +24,23 @@ describe("Create entries", function() {
 
 describe("Retrieve entries", function() {
     it("by ID", async function() {
-        var testEntryID = await journal.createEntry("A entry that links to another entry (#1) and is in two catagories: #tests #has-links")
-        const entry = await journal.getEntry(testEntryID)
+        var testEntry = await journal.createEntry("A entry that links to another entry (#1) and is in two catagories: #tests #has-links")
+        const retrievedEntry = await journal.getEntry(testEntry.id)
 
-        assert.equal(entry.content, "A entry that links to another entry (#1) and is in two catagories: #tests #has-links")
-        assert.equal(entry.id, testEntryID)
-        assert(entry.created_at <= Date.now())
+        assert.equal(retrievedEntry.content, "A entry that links to another entry (#1) and is in two catagories: #tests #has-links", testEntry.entry)
+        assert.equal(retrievedEntry.id, testEntry.id)
+        assert(retrievedEntry.created_at <= Date.now())
     })
 })
 
 describe("Find entries", function() {
     it("by Tags", async function() {
-        var testEntryID = await journal.createEntry("Entry #with #lots #of custom tags")
+        var testEntry = await journal.createEntry("Entry #with #lots #of custom tags")
 
         var searchResult = await journal.findEntries("#with #lots #of")
 
         assert.equal(searchResult.length, 1)
-        assert.equal(searchResult[0], testEntryID)
+        assert.equal(searchResult[0], testEntry.id)
     })
 })
 

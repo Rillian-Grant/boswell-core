@@ -10,9 +10,9 @@ CREATE TABLE IF NOT EXISTS entry(
     created_at INTEGER NOT NULL
 );
 CREATE TABLE IF NOT EXISTS tag(
-    tag TEXT,
-    entry INTEGER,
-    FOREIGN KEY (entry) REFERENCES entry(id)
+    tag_text TEXT,
+    tagged_entry INTEGER,
+    FOREIGN KEY (tagged_entry) REFERENCES entry(id)
 );
 `
 
@@ -34,13 +34,24 @@ export default class Journal {
         await this.db.exec(sql)
     }
 
-    async createEntry(entry) {
+    /*
+    Receives: The text of the new entry
+    Returns: The entry object just created
+    */
+    async createEntry(content) {
         await this.#connectDB()
 
-        const result = await this.db.run("INSERT INTO entry(content, created_at) VALUES (?, ?)", entry, Date.now())
-        await this.#createTags(result.lastID, entry)
+        var entry = {
+            content,
+            created_at: Date.now(),
+            id: null
+        }
 
-        return result.lastID
+        const result = await this.db.run("INSERT INTO entry(content, created_at) VALUES (?, ?)", entry.content, entry.created_at)
+        entry.id = result.lastID
+        await this.#createTags(entry.id, entry.content)
+
+        return entry
     }
 
     async #createTags(entry_id, entry) {
@@ -62,11 +73,11 @@ export default class Journal {
 
         var ids = await this.db.all(`
             SELECT entry.id FROM (
-                SELECT tag.entry FROM tag
-                WHERE tag.tag IN (${"?, ".repeat(tags.length-1)+"?"})
-                GROUP BY tag.entry HAVING COUNT(DISTINCT tag.tag) = ?
+                SELECT tag.tagged_entry FROM tag
+                WHERE tag.tag_text IN (${"?, ".repeat(tags.length-1)+"?"})
+                GROUP BY tag.tagged_entry HAVING COUNT(DISTINCT tag.tag_text) = ?
             ) AS entriesContainingAllTags
-            JOIN entry ON entry.id = entriesContainingAllTags.entry
+            JOIN entry ON entry.id = entriesContainingAllTags.tagged_entry
         `,
         [...tags, tags.length]
         )
@@ -81,28 +92,6 @@ export default class Journal {
     }
 
     async getTags(entry_id) {
-        return await (await this.db.all("SELECT tag FROM tag WHERE entry=?", entry_id)).map(obj => (obj.tag))
+        return await (await this.db.all("SELECT tag_text FROM tag WHERE entry=?", entry_id)).map(obj => (obj.tag))
     }
-
-    // Useless?
-    async getIncomingLinks(entry_id) {
-        return await this.findEntries("#" + entry_id)
-    }
-
-    async getOutgoingLinks(entry_id) {
-        var tags = await this.getTags(entry_id)
-
-        tags = tags.filter(tag => /\d+/.test(tag))
-
-        return tags
-    }
-    // /Useless?
 }
-
-/*
-(async () => {
-    var j = await new Journal("./db.db")
-    await j.createEntry("Test")
-    await j.createEntry("Test2 #atest #blob #5 #3463")
-    await j.findEntries("#atest #blob")
-})()*/
