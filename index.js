@@ -18,20 +18,21 @@ CREATE TABLE IF NOT EXISTS tag(
 
 export default class Journal {
     constructor(dbFile) {
-        this.db = null
-        this.dbFile = dbFile
-    }
-
-    async #connectDB() {
-        if (this.db) return
-
-        this.db = await open({
-            filename: this.dbFile,
+        this.db = open({
+            filename: dbFile,
             driver: sqlite3.Database
         })
+    }
+
+    async #setup() {
+        this.db = await this.db
 
         //var sql = await fs.promises.readFile("./schema.sql", "utf8")
         await this.db.exec(sql)
+    }
+
+    extractTagsFromString(str) {
+        return str.match(/#(\w+)/g)
     }
 
     /*
@@ -39,7 +40,7 @@ export default class Journal {
     Returns: The entry object just created
     */
     async createEntry(content) {
-        await this.#connectDB()
+        await this.#setup()
 
         var entry = {
             content,
@@ -56,7 +57,7 @@ export default class Journal {
 
     async #createTags(entry_id, entry) {
         // Returns an array of tags
-        var tags = entry.match(/#(\w+)/g)
+        var tags = this.extractTagsFromString(entry)
         // IF there are any tags
         if (tags) {
             // Remove the hash
@@ -68,11 +69,9 @@ export default class Journal {
         }
     }
 
-    async findEntries(tags) {
-        tags = tags.match(/#(\w+)/g).map(tag => tag.slice(1))
-
-        var ids = await this.db.all(`
-            SELECT entry.id FROM (
+    async findEntriesByTags(tags) {
+        return await this.db.all(`
+            SELECT * FROM (
                 SELECT tag.tagged_entry FROM tag
                 WHERE tag.tag_text IN (${"?, ".repeat(tags.length-1)+"?"})
                 GROUP BY tag.tagged_entry HAVING COUNT(DISTINCT tag.tag_text) = ?
@@ -81,10 +80,6 @@ export default class Journal {
         `,
         [...tags, tags.length]
         )
-        
-        ids = ids.map(tag => tag.id)
-
-        return ids
     }
 
     async getEntry(entry_id) {

@@ -37,10 +37,10 @@ describe("Find entries", function() {
     it("by Tags", async function() {
         var testEntry = await journal.createEntry("Entry #with #lots #of custom tags")
 
-        var searchResult = await journal.findEntries("#with #lots #of")
+        var searchResult = await journal.findEntriesByTags(["with", "lots", "of"])
 
         assert.equal(searchResult.length, 1)
-        assert.equal(searchResult[0], testEntry.id)
+        assert.equal(searchResult[0].id, testEntry.id)
     })
 })
 
