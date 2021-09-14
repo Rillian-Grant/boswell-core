@@ -1,11 +1,15 @@
 import assert, { doesNotThrow } from 'assert';
 import Journal from "../index.js";
 
-var journal = new Journal(":memory:")
+var journal = new Journal("test/test.db")
 
-// Return promise in test just waits for error
-before(async function() {
-    await journal
+describe("Test helper functions", function() {
+    it("Extract Tags From Text", function() {
+        assert.equal(
+            JSON.stringify(journal.extractTagsFromString("Entry #with #lots #of custom tags")),
+            JSON.stringify(["with", "lots", "of"])
+        )
+    })
 })
 
 describe("Create entries", function() {
@@ -44,7 +48,32 @@ describe("Find entries", function() {
     })
 })
 
-after(function(done) {
-    // Close connection
-    setTimeout(() => done(), 1000)
+describe("Add/Remove tags", function() {
+    var testEntry
+
+    before(async function() {
+        testEntry = await journal.createEntry("Entry #with #lots #of custom tags")
+    })
+
+    it("Attempt and fail to delete base tags", async function() {
+        // Should just be one line. Figure out how assert.throws works
+        try {
+            await journal.removeTag(testEntry.id, ["with", "lots", "of"])
+            throw "No error"
+        } catch (err) {
+            if (err != "Some tags can not be deleted") {
+                throw "Wrong error: " + err
+            }
+        }
+    })
+
+    it("Create new tags", async function() {
+        const testTags = ["Some", "additional", "tags"]
+
+        await journal.addTag(testEntry.id, testTags)
+
+        const tags = await journal.getTags(testEntry.id)
+
+        tags.forEach(tag => { if (!tag.baseTag) assert(testTags.includes(tag.tag_text))})
+    })
 })

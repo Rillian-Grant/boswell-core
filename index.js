@@ -32,7 +32,14 @@ export default class Journal {
     }
 
     extractTagsFromString(str) {
-        return str.match(/#(\w+)/g)
+        var tags = str.match(/#(\w+)/g)
+
+        // Unnecessary tags will always start with #
+        if (tags) return tags.map(tag => {
+            if (tag[0] === '#') {
+                return tag.substring(1)
+            } else return tag
+        }) ////// ######## PROBLEM!!!!
     }
 
     /*
@@ -55,14 +62,11 @@ export default class Journal {
         return entry
     }
 
-    async #createTags(entry_id, entry) {
+    async #createTags(entry_id, entry_content) {
         // Returns an array of tags
-        var tags = this.extractTagsFromString(entry)
+        var tags = this.extractTagsFromString(entry_content)
         // IF there are any tags
-        if (tags) {
-            // Remove the hash
-            tags = tags.map(tag => tag.slice(1))
-        
+        if (tags) {      
             for (var i in tags) {
                 await this.db.run("INSERT INTO tag VALUES (?,?)", tags[i], entry_id)
             }
@@ -87,6 +91,35 @@ export default class Journal {
     }
 
     async getTags(entry_id) {
-        return await (await this.db.all("SELECT tag_text FROM tag WHERE entry=?", entry_id)).map(obj => (obj.tag))
+        const baseTags = this.extractTagsFromString((await this.getEntry(entry_id)).content)
+
+        var tags = await this.db.all("SELECT * FROM tag WHERE tagged_entry=?", entry_id)
+
+        return tags.map(tag => ({
+            ...tag,
+            baseTag: (baseTags.includes(tag.tag_text))
+        }))
+    }
+
+    async checkEntryExists(entry_id) {
+        return await this.db.get("EXISTS (SELECT id FROM entry WHERE id=?)", entry_id)
+    }
+
+    async addTag(entry_id, tags) {
+        if (!this.checkEntryExists(entry_id)) throw "No such entry"
+
+        for (var i in tags) {
+            await this.db.run("INSERT INTO tag VALUES (?,?)", tags[i], entry_id)
+        }
+    }
+
+    async removeTag(entry_id, tags) {
+        const currentTagsThatCanBeDeleted = (await this.getTags(entry_id)).filter(tag => !tag.base).map(tag => tag.tag_text)
+
+        if (!currentTagsThatCanBeDeleted.includes(tags)) throw "Some tags can not be deleted"
+
+        for (var i in tags) {
+            await this.db.run("DELETE FROM tag WHERE tag_text=? AND entry_id=?", tags[i], entry_id)
+        }
     }
 }
