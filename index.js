@@ -66,7 +66,7 @@ export default class Journal {
         // Returns an array of tags
         var tags = this.extractTagsFromString(entry_content)
         // IF there are any tags
-        if (tags) {      
+        if (tags) {
             for (var i in tags) {
                 await this.db.run("INSERT INTO tag VALUES (?,?)", tags[i], entry_id)
             }
@@ -108,8 +108,11 @@ export default class Journal {
     async addTag(entry_id, tags) {
         if (!this.checkEntryExists(entry_id)) throw "No such entry"
 
+        const currentTags = await this.getTags(entry_id)
+
         for (var i in tags) {
-            await this.db.run("INSERT INTO tag VALUES (?,?)", tags[i], entry_id)
+            if (!currentTags.map(tag => tag.tag_text).includes(tags[i])) await this.db.run("INSERT INTO tag VALUES (?,?)", tags[i], entry_id)
+            else throw `Entry ${entry_id} already has tag ${tags[i]}`
         }
     }
 

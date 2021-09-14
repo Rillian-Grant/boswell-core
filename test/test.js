@@ -1,7 +1,7 @@
 import assert, { doesNotThrow } from 'assert';
 import Journal from "../index.js";
 
-var journal = new Journal("test/test.db")
+var journal = new Journal(":memory:")
 
 describe("Test helper functions", function() {
     it("Extract Tags From Text", function() {
@@ -75,5 +75,13 @@ describe("Add/Remove tags", function() {
         const tags = await journal.getTags(testEntry.id)
 
         tags.forEach(tag => { if (!tag.baseTag) assert(testTags.includes(tag.tag_text))})
+    })
+
+    it("Remove added tags", async function() {
+        const testTags = ["Some", "additional", "tags"]
+
+        await journal.addTag(testEntry.id, testTags)
+
+        const tags = await journal.getTags(testEntry.id)
     })
 })
