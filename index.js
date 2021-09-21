@@ -1,6 +1,6 @@
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
-import SQL from "sql-template-strings";
+// TODO import SQL from "sql-template-strings";
 // import fs from "fs";
 
 const sql = `
@@ -74,6 +74,8 @@ export default class Boswell {
     }
 
     async findEntriesByTags(tags) {
+        await this.#setup()
+
         return await this.db.all(`
             SELECT * FROM (
                 SELECT tag.tagged_entry FROM tag
@@ -87,10 +89,14 @@ export default class Boswell {
     }
 
     async getEntry(entry_id) {
+        await this.#setup()
+
         return await this.db.get("SELECT * FROM entry WHERE id=?", entry_id)
     }
 
     async getTags(entry_id) {
+        await this.#setup()
+
         const baseTags = this.extractTagsFromString((await this.getEntry(entry_id)).content)
 
         var tags = await this.db.all("SELECT * FROM tag WHERE tagged_entry=?", entry_id)
@@ -102,10 +108,14 @@ export default class Boswell {
     }
 
     async checkEntryExists(entry_id) {
+        await this.#setup()
+
         return await this.db.get("EXISTS (SELECT id FROM entry WHERE id=?)", entry_id)
     }
 
     async addTag(entry_id, tags) {
+        await this.#setup()
+
         if (!this.checkEntryExists(entry_id)) throw "No such entry"
 
         const currentTags = await this.getTags(entry_id)
@@ -117,6 +127,8 @@ export default class Boswell {
     }
 
     async removeTag(entry_id, tagsToDelete) {
+        await this.#setup()
+
         // Get tags that can be deleted
         const tags = await this.getTags(entry_id)
         if (tags.length > 0) {
