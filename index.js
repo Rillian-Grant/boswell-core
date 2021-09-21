@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS tag(
 );
 `
 
-export default class Journal {
+export default class Boswell {
     constructor(dbFile) {
         this.db = open({
             filename: dbFile,

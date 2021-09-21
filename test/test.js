@@ -1,10 +1,10 @@
 import assert, { doesNotThrow } from 'assert';
-import Journal from "../index.js";
+import Boswell from "../index.js";
 import fs from "fs";
 
 if (fs.existsSync("test/test.db")) fs.unlinkSync("test/test.db")
 
-var journal = new Journal("test/test.db")
+var journal = new Boswell("test/test.db")
 
 describe("Test helper functions", function() {
     it("Extract Tags From Text", function() {
