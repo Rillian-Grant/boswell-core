@@ -2,7 +2,7 @@ import assert, { doesNotThrow } from 'assert';
 import Journal from "../index.js";
 import fs from "fs";
 
-fs.unlinkSync("test/test.db")
+if (fs.existsSync("test/test.db")) fs.unlinkSync("test/test.db")
 
 var journal = new Journal("test/test.db")
 
