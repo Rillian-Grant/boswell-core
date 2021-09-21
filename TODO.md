@@ -17,3 +17,4 @@
 * Documentation
 * Try to replace for loops on arrays with something like forEach but that works with async
 * Figure out assert.throws
+* JSDoc

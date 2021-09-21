@@ -1,7 +1,10 @@
 import assert, { doesNotThrow } from 'assert';
 import Journal from "../index.js";
+import fs from "fs";
 
-var journal = new Journal(":memory:")
+fs.unlinkSync("test/test.db")
+
+var journal = new Journal("test/test.db")
 
 describe("Test helper functions", function() {
     it("Extract Tags From Text", function() {
@@ -80,7 +83,7 @@ describe("Add/Remove tags", function() {
     it("Remove added tags", async function() {
         const testTags = ["Some", "additional", "tags"]
 
-        await journal.addTag(testEntry.id, testTags)
+        await journal.removeTag(testEntry.id, testTags)
 
         const tags = await journal.getTags(testEntry.id)
     })

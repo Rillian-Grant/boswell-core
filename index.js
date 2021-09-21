@@ -116,13 +116,21 @@ export default class Journal {
         }
     }
 
-    async removeTag(entry_id, tags) {
-        const currentTagsThatCanBeDeleted = (await this.getTags(entry_id)).filter(tag => !tag.base).map(tag => tag.tag_text)
+    async removeTag(entry_id, tagsToDelete) {
+        // Get tags that can be deleted
+        const tags = await this.getTags(entry_id)
+        if (tags.length > 0) {
+            var currentTagsThatCanBeDeleted = tags.filter(tag => !tag.baseTag)
+        } else {
+            var currentTagsThatCanBeDeleted = []
+        }
 
-        if (!currentTagsThatCanBeDeleted.includes(tags)) throw "Some tags can not be deleted"
+        var currentTagNamesThatCanBeDeleted = currentTagsThatCanBeDeleted.map(tag => tag.tag_text)
+
+        if (!tagsToDelete.every(tag => currentTagNamesThatCanBeDeleted.includes(tag))) throw "Some tags can not be deleted"
 
         for (var i in tags) {
-            await this.db.run("DELETE FROM tag WHERE tag_text=? AND entry_id=?", tags[i], entry_id)
+            await this.db.run("DELETE FROM tag WHERE tag_text=? AND tagged_entry=?", tagsToDelete[i], entry_id)
         }
     }
 }
