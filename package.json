@@ -2,6 +2,7 @@
   "name": "boswell-core",
   "version": "0.1.0",
   "description": "Core API for boswell.",
+  "repository": "https://github.com/Rillian-Grant/boswell-core",
   "main": "index.js",
   "scripts": {
     "test": "mocha"
