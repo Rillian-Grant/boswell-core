@@ -7,11 +7,16 @@ if (fs.existsSync("test/test.db")) fs.unlinkSync("test/test.db")
 var journal = new Boswell("test/test.db")
 
 describe("Test helper functions", function() {
-    it("Extract Tags From Text", function() {
-        assert.equal(
-            JSON.stringify(journal.extractTagsFromString("Entry #with #lots #of custom tags")),
-            JSON.stringify(["with", "lots", "of"])
-        )
+    describe("extractTagsFromString", function() {
+        it("Extract Tags From Text", function() {
+            assert.equal(
+                JSON.stringify(journal.extractTagsFromString("Entry #with #lots #of custom tags")),
+                JSON.stringify(["with", "lots", "of"])
+            )
+        })
+        it("Empty String", function() {
+            assert.equal(journal.extractTagsFromString(""), null)
+        })
     })
 })
 

@@ -9,7 +9,7 @@
 - [skip] Find entries by a string. First use above to extract the tags and find all that match the tags. Then filter by words. Return the entries
 - [x] Attach and remove a new tag from/to an entry
 - [x] Get tags associated with an entry
-- [ ] Check obscure js
+- [x] Check obscure js
 
 ## Other
 
@@ -20,3 +20,5 @@
 - Try to replace for loops on arrays with something like forEach but that works with async
 - Figure out assert.throws
 - JSDoc
+- Create proper error objects
+- Create classes for entry objects etc
