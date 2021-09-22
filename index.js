@@ -122,6 +122,28 @@ export default class Boswell {
     }
 
     /**
+     * 
+     * @param {number} starting_position - A date and time in the form of the number of milliseconds elapsed since January 1, 1970 00:00:00 UTC, with leap seconds ignored.
+     * @param {number} number - Number of results to return.
+     * @param {boolean} [above] - Should results be all entries above starting_position (true)? or below (default)
+     * @param {boolean} [ascending] - Order results in ascending order aka oldest first (true) or not (default)
+     */
+    async findEntries(starting_position, number, above, ascending) {
+
+        // To get the <number> closest results to the <starting_position> you need to order by ascending when looking above the starting_position and descending when looking below the starting_position.
+        // You then need to reverse the order of results only if the order used to search conflicts with the specified order
+        if (above) {
+            var res = await this.db.all("SELECT * FROM entry WHERE created_at >= ? ORDER BY created_at ASC LIMIT ?", starting_position, number)
+            if (ascending) return res
+            else return res.reverse()
+        } else { // below
+            var res = await this.db.all("SELECT * FROM entry WHERE created_at <= ? ORDER BY created_at DESC LIMIT ?", starting_position, number)
+            if (!ascending) return res
+            else return res.reverse()
+        }
+    }
+
+    /**
      * @description Get entry by id
      * @param {number} entry_id 
      * @returns {{ id: number, content: string, created_at: number }}
